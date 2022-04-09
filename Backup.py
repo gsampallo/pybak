@@ -24,7 +24,7 @@ class Backup:
             task = self.get_task(job_name,full_backup)
 
         logfile = "./log/{}_{}_{}.log".format(task.job_id,task.number,task.type)
-        logging.basicConfig(filename=logfile, encoding='utf-8', level=logging.INFO)
+        logging.basicConfig(filename=logfile, level=logging.INFO)
         logging.info("Start backup at "+datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 
         os.makedirs(self.get_output_folder(self.job,task),exist_ok=True)
@@ -133,6 +133,10 @@ class Backup:
 
         ftp = FTP(host=self.parameters.ftp_server,user=self.parameters.ftp_user,passwd=self.parameters.ftp_pass)
         ftp.encoding = "utf-8"
+
+        if self.parameters.ftp_home != "":
+            ftp.cwd(self.parameters.ftp_home)
+
         if for_path not in ftp.nlst():
             ftp.mkd(for_path)
         ftp.cwd(for_path)

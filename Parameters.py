@@ -24,4 +24,5 @@ class Parameters:
             self.ftp_pass = data["ftp_pass"]
             self.delete_after_upload = data["delete_after_upload"]
             self.upload_files = data["upload_files"]
+            self.ftp_home = data["ftp_home"]
         

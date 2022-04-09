@@ -21,19 +21,27 @@ class Backup:
         list_folders = self.list_file_in_folder(self.parameters.local_path)
         for folder in list_folders:
             
-            filename_zip = self.get_filename(folder,job)
-            print("Folder: "+folder+" -> "+filename_zip)
+            if os.path.isdir(folder):
 
-            all_files = self.list_all_files(folder)
-            files_to_add = []
-            for file in all_files:
-                if full_backup:
-                    files_to_add.append(file)
-                elif not self.exist_in_database(file):
-                    files_to_add.append(file)
+                filename_zip = self.get_filename(folder,job)
+                print("Folder: "+folder+" -> "+filename_zip)
 
-            if len(files_to_add) > 0:
-                self.process_files(filename_zip,files_to_add,job)
+                all_files = self.list_all_files(folder)
+                files_to_add = []
+                for file in all_files:
+                    if full_backup:
+                        files_to_add.append(file)
+                    elif not self.exist_in_database(file):
+                        files_to_add.append(file)
+
+                if len(files_to_add) > 0:
+                    self.process_files(filename_zip,files_to_add,job)
+            
+            else:
+                print("File: "+folder)
+                filename_zip = self.get_filename(folder,job)
+                print("File: "+folder+" -> "+filename_zip)
+                self.process_files(filename_zip,[folder],job)
 
 
 

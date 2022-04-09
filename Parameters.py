@@ -18,3 +18,4 @@ class Parameters:
             self.database = data["database"]
             self.remote_path = data["remote_path"]
             self.local_path = data["local_path"]
+            self.number_incrementals = data["number_incrementals"]

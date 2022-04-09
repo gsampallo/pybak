@@ -1,0 +1,6 @@
+__pycache__
+configuration.json
+database.db
+demo
+docker_mail
+docker-compose.yml

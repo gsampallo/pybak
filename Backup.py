@@ -1,11 +1,13 @@
 import io,sys,os
 import datetime
 import zipfile
+from ftplib import FTP
 from Parameters import Parameters
 from CompressFiles import CompressFiles
 import BD
 import Models
-
+import shutil
+import logging
 
 class Backup:
 
@@ -20,6 +22,10 @@ class Backup:
             task = self.set_full_backup(job_name)
         else:
             task = self.get_task(job_name,full_backup)
+
+        logfile = "./log/{}_{}_{}.log".format(task.job_id,task.number,task.type)
+        logging.basicConfig(filename=logfile, encoding='utf-8', level=logging.INFO)
+        logging.info("Start backup at "+datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 
         os.makedirs(self.get_output_folder(self.job,task),exist_ok=True)
         #os.makedirs(self.parameters.remote_path+self.job.get_foldername(), exist_ok=True)
@@ -46,6 +52,31 @@ class Backup:
                 self.process_files(filename_zip,[folder],self.job)
             
         self.final_report()
+        
+        if self.parameters.upload_files:
+    
+            files_to_upload = os.listdir(self.get_output_folder(self.job,task))
+            path_ftp = str(self.job.id)+"_"+str(task.number)+"_"+self.job.name
+            path_for_files = self.get_output_folder(self.job,task)
+            self.upload_files(path_ftp,path_for_files,files_to_upload)
+
+            if self.parameters.delete_after_upload:
+                self.delete_files(self.get_output_folder(self.job,task))
+                try:
+                    shutil.rmtree(self.get_output_folder(self.job,task))
+                except OSError as e:
+                    print("Error: %s." % (e.strerror))
+                
+            
+        logging.info("Backup finish at "+datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+
+    def delete_files(self,folder):
+        files = self.list_file_in_folder(folder)
+        for file in files:
+            print("Remove file: "+file)
+            logging.info("Remove file: "+file)
+            os.remove(file)
+
 
     def remove_path_from_filename(self,path, filename):
         if path in filename:
@@ -98,13 +129,27 @@ class Backup:
                     self.job = self.create_new_job(job_name)
                     return self.create_new_task(self.job.id,0,"full")
         
-    
+    def upload_files(self,for_path,path,files):
+
+        ftp = FTP(host=self.parameters.ftp_server,user=self.parameters.ftp_user,passwd=self.parameters.ftp_pass)
+        ftp.encoding = "utf-8"
+        if for_path not in ftp.nlst():
+            ftp.mkd(for_path)
+        ftp.cwd(for_path)
+
+        for file in files:
+            with open(path+"/"+file, "rb") as file_to_ftp:
+                print("Uploading file: "+file)
+                logging.info("Uploading file: "+file)
+                ftp.storbinary("STOR " + file, file_to_ftp)
+        ftp.quit()
 
     def process_files(self,filename_zip,files_to_add,task):
         zip_file = zipfile.ZipFile(filename_zip, 'w')
         for file in files_to_add:
             self.total_process_files += 1
             print("Adding {} to {}".format(file,filename_zip))
+            logging.info("Adding {} to {}".format(file,filename_zip))
             zip_file.write(file)
             self.add_file_to_database(file,task)
         zip_file.close()
@@ -147,6 +192,13 @@ class Backup:
     def final_report(self):
         print("Total files: {}".format(self.total_files))
         print("Total process files: {}".format(self.total_process_files))
+        logging.info("Total files: {}".format(self.total_files))
+        logging.info("Total process files: {}".format(self.total_process_files))
+    
+    def upload_file(self,filename):
+        print("Uploading {}".format(filename))
+        self.sftp.put(filename,self.parameters.remote_path+filename)
+        print("Uploaded {}".format(filename))
 
 if __name__ == "__main__":
     job_name = "mail"

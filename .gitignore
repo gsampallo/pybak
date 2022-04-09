@@ -6,3 +6,4 @@ docker_mail
 docker-compose.yml
 output
 demo.py
+ftp_docker

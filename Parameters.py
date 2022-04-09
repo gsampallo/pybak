@@ -19,3 +19,9 @@ class Parameters:
             self.remote_path = data["remote_path"]
             self.local_path = data["local_path"]
             self.number_incrementals = data["number_incrementals"]
+            self.ftp_server = data["ftp_server"]
+            self.ftp_user = data["ftp_user"]
+            self.ftp_pass = data["ftp_pass"]
+            self.delete_after_upload = data["delete_after_upload"]
+            self.upload_files = data["upload_files"]
+        
